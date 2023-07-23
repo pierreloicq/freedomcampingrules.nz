@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:og="http://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  
+  <meta property="og:title" content="Freedom camping rules map in NZ" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://freedomcampingrules.nz/" />
+  <meta property="og:image" content="https://freedomcampingrules.nz/pic_social_426.png" />
+  <meta property="og:description" content="Find out which freedom camping rules apply to your location in New Zealand" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Find out which freedom camping rules apply to your location in New Zealand" />
+  <title>Freedom camping rules map in NZ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+  
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      -webkit-box-sizing:border-box;
+      -moz-box-sizing:border-box;
+      box-sizing:border-box;
+    }
+    body,html{
+      height:100%;
+      width: 100vw;
+      display: flex;
+      flex-flow: column;
+    }
+    #blabla {
+      padding: 1em;
+      font-size: 0.8em;
+      font-family: "Helvetica", Sans-serif;
+      color: black;
+      background-color: #f2f2f2;
+    }
+    footer {
+      padding: 0.3em;
+      font-size: 0.6em;
+      font-family: "Helvetica", Sans-serif;
+      color: black;
+      padding-left: 0.8em;
+      background-color: #f2f2f2;
+    }
+    #map {
+      height:100%;
+    }
+    a:visited {
+      color: #002bb8;
+    }
+	
+	h1 {
+      font-weight: bold;
+      font-size: 1.5em;
+    }
+  </style>
+
+</head>
+<body>
+  <div id="blabla">
+    <h1>Freedom camping in New Zealand</h1>
+    <p>
+      Each district has its own freedom camping rules. <br>
+      To see them, <br>
+      - enable geolocation on your device <br>
+      - click on the "geolocate me" button on the map <br>
+      - click on the district polygon and follow the link. <br>
+      For more information about freedom camping, see <a href='https://www.freedomcamping.org/plan-your-trip-2/laws/' target="_blank">freedomcamping.org</a> <br>
+    </p>
+  </div>
+  
+  <div id="map" ></div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="https://d3js.org/topojson.v1.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+  <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
+  <link href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+
+  <script>
+    // Copyright (c) 2013 Ryan Clark
+    // https://gist.github.com/rclark/5779673
+    L.TopoJSON = L.GeoJSON.extend({
+      addData: function(jsonData) {    
+        if (jsonData.type === "Topology") {
+          for (key in jsonData.objects) {
+            geojson = topojson.feature(jsonData, jsonData.objects[key]);
+            L.GeoJSON.prototype.addData.call(this, geojson);
+          }
+        }
+        else {
+          L.GeoJSON.prototype.addData.call(this, jsonData);
+        }
+      }
+    });
+  </script>
+  
+  <script>
+    var map = L.map('map').setView([-42,172], 6);
+    L.control.scale().addTo(map);
+    map.addControl( new L.Control.Fullscreen() );
+
+    var localiseMeButton = L.control.locate({
+      keepCurrentZoomLevel: true,
+      clickBehavior: {
+        inView: 'setView',
+        outOfView: 'setView',
+        inViewNotFollowing: 'setView',
+      },
+      locateOptions: {
+        enableHighAccuracy: true,
+      },
+    }).addTo(map);
+  
+    //localiseMeButton.start()
+
+    // add OpenStreetMap layer
+    L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	    attribution: 
+      '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'  + " | " + 
+      '<a href="https://datafinder.stats.govt.nz/layer/98755-territorial-authority-2019-generalised/">District polygons</a>'
+    }).addTo(map);
+    
+    var myStyle = {
+      fillColor : '#ffff99',
+      fillOpacity: 0.3,
+      color:'#008000',
+      weight:2,
+      opacity:1
+    };
+    
+    var topoLayer = new L.TopoJSON(null, {style: myStyle, onEachFeature: onEachFeature});
+    
+    $.getJSON('ta2019modified_4326_simplified10.topojson').done(addTopoData);
+    
+    function onEachFeature(feature, layer) {
+      var popupContent;
+      if ( feature.properties.URL != "" )
+        popupContent = '<a href="' + feature.properties.URL + '" target="_blank">' + feature.properties.TAname + '</a>' ;
+      else
+        popupContent = feature.properties.TAname;
+        
+      layer.bindPopup(popupContent);
+    }
+    
+    function addTopoData(topoData){
+      topoLayer.addData(topoData);
+      topoLayer.addTo(map);
+    }
+  </script>
+
+  <footer>
+    <a href="partners.html">Our friends</a> |
+    <script type="text/javascript">
+    //<![CDATA[
+    var d="";for(var i=0;i<415;i++)d+=String.fromCharCode(("/y+8|U::S~(+@/y+8\"UHS\"TKHIS\"CCA|CUk-+\"\' F~+(&[!y+[(|}@@:,7+=5-6<Ut?t:1<-ONc)G0t:-tt.dIIGtt76tt57=;-7>-t:dI<01;U0t:-.dtt$N5tt)14<7aNUt:-84)+-OVttV/SIIPRON+76\"<)+<f.t:--,75+)5816/\"\"t:=4-;NUt:-84)+-OV\"V/SIiIU;=*;<t:OXPPRIUIU+0)t:h<OWPRz<t:16/U.t:75j0)t:j7,-OXXWSXY[TYPPUt:-84)+-OV$fV/SIgIPRN$NIG\\7657=;-7=<d\\I<01;U0t:-.d$N\\$NIeit:73-6G4163fGw4-);-G<-44G=;cV)eNUt:-84)+-OV\\V/S#II%#W%PP:F{!y+[(|}Y-@\"ACLPA=QMCKJAS}/y%@|A".charCodeAt(i)+39)%95+32);eval(d)
+    //]]>
+    </script>
+    | This website uses cookies for stats purposes
+    <br>
+    Like this website? Tell a friend!
+    
+  </footer>
+  
+  <!-- Start Open Web Analytics Tracker -->
+  <script type="text/javascript">
+  //<![CDATA[
+  var owa_baseUrl = 'https://analytics.1pactweb.fr/';
+  var owa_cmds = owa_cmds || [];
+  owa_cmds.push(['setSiteId', 'd3966dfa6c54dd02e7744508a31de0a9']);
+  owa_cmds.push(['trackPageView']);
+  owa_cmds.push(['trackClicks']);
+
+  (function() {
+    var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
+    owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
+    _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
+    var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
+  }());
+  //]]>
+  </script>
+  <!-- End Open Web Analytics Code -->
+</body>
+</html>
